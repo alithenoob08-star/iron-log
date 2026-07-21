@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  /* Iron plate palette: near-black steel with a hot-iron accent. */
-  --color-bg: #0a0a0b;
-  --color-surface: #17181c;
-  --color-surface-2: #1f2025;
-  --color-border: #2b2c32;
-  --color-fg: #f3f2ee;
-  --color-fg-muted: #9a9aa1;
-  --color-accent: #e0402a;
-  --color-accent-fg: #fff5f2;
-  --color-steel: #6b8299;
-  --color-success: #4caf6a;
-  --color-warning: #d9a441;
+  /* Sharp black / white / blue palette. */
+  --color-bg: #050507;
+  --color-surface: #121316;
+  --color-surface-2: #1b1c20;
+  --color-border: #2a2c31;
+  --color-fg: #ffffff;
+  --color-fg-muted: #9799a3;
+  --color-accent: #2f7dfa;
+  --color-accent-fg: #ffffff;
+  --color-steel: #6d7789;
+  --color-success: #46c37b;
+  --color-warning: #e0ab4c;
 }
 
 @theme inline {
@@ -29,7 +29,7 @@
   --color-warning: var(--color-warning);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-oswald);
+  --font-display: var(--font-bebas-neue);
 }
 
 html {
@@ -48,8 +48,8 @@ h3,
 h4 {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-weight: 400;
 }
 
 .tabular {

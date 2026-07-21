@@ -60,7 +60,7 @@ export function SettingsForm({
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-lg bg-accent py-3 font-display font-bold uppercase tracking-wide text-accent-fg transition hover:brightness-110 disabled:opacity-60"
+        className="w-full rounded-lg bg-accent py-3 font-display text-lg uppercase tracking-wide text-accent-fg transition hover:brightness-110 disabled:opacity-60"
       >
         {isPending ? "Saving..." : "Save Settings"}
       </button>

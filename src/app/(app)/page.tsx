@@ -42,7 +42,7 @@ export default async function HomePage() {
 
       <Link
         href="/log"
-        className="rounded-xl bg-accent px-6 py-5 text-center font-display text-xl font-bold uppercase tracking-wide text-accent-fg transition hover:brightness-110"
+        className="rounded-xl bg-accent px-6 py-5 text-center font-display text-2xl uppercase tracking-wide text-accent-fg transition hover:brightness-110"
       >
         Start Workout
       </Link>

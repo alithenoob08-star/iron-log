@@ -46,7 +46,7 @@ export default async function StartLogPage({
         {dayId && <input type="hidden" name="routineDayId" value={dayId} />}
         <button
           type="submit"
-          className="rounded-xl bg-accent px-6 py-5 text-center font-display text-xl font-bold uppercase tracking-wide text-accent-fg transition hover:brightness-110"
+          className="rounded-xl bg-accent px-6 py-5 text-center font-display text-2xl uppercase tracking-wide text-accent-fg transition hover:brightness-110"
         >
           {dayName ? `Start ${dayName}` : "Start Freeform Workout"}
         </button>

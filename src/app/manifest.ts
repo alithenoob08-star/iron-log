@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Workout tracking for the crew.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0a0b",
-    theme_color: "#0a0a0b",
+    background_color: "#050507",
+    theme_color: "#050507",
     icons: [
       {
         src: "/icons/icon-192.png",
