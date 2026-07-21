@@ -6,4 +6,5 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
       { url: "/offline", revision: String(Date.now()) },
     ],
     swSrc: "src/app/sw.ts",
+    useNativeEsbuild: true,
   });
