@@ -19,7 +19,7 @@ export default async function AppLayout({
   // src/lib/supabase/proxy.ts) so a transient edge-runtime hiccup there
   // doesn't bounce active users out at random. This is the real
   // enforcement point, running in the regular Node runtime.
-  if (!user) redirect("/login?src=applayout");
+  if (!user) redirect("/offline");
 
   const { data: profile } = await supabase
     .from("profiles")
