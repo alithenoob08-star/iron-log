@@ -6,6 +6,7 @@ import { addMeasurementAction, type BodyFormState } from "@/app/(app)/body/actio
 const initialState: BodyFormState = { error: null };
 
 const MEASUREMENT_TYPES: { value: string; label: string }[] = [
+  { value: "height", label: "Height" },
   { value: "waist", label: "Waist" },
   { value: "chest", label: "Chest" },
   { value: "hips", label: "Hips" },

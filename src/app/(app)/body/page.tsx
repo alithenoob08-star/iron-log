@@ -12,6 +12,7 @@ import {
 } from "./actions";
 
 const MEASUREMENT_LABELS: Record<string, string> = {
+  height: "Height",
   waist: "Waist",
   chest: "Chest",
   hips: "Hips",

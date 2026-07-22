@@ -13,6 +13,7 @@ export type MuscleGroup =
   | "other";
 
 export type MeasurementType =
+  | "height"
   | "waist"
   | "chest"
   | "hips"
