@@ -31,15 +31,23 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Fail closed: if we can't reach Supabase to verify the session, treat the
-  // request as unauthenticated rather than 500ing every route.
+  // The proxy runs in a constrained edge runtime where the auth check to
+  // Supabase can transiently fail (network hiccup, cold start) even for a
+  // genuinely logged-in user. Treating that as "logged out" was bouncing
+  // people out of active flows at random. So: only act on a *definitive*
+  // answer from Supabase here; on error, just pass the request through and
+  // let the real enforcement happen server-side in (app)/layout.tsx, which
+  // runs in the regular Node runtime and isn't subject to this flakiness.
   let user = null;
+  let checkFailed = false;
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    user = null;
+    checkFailed = true;
   }
+
+  if (checkFailed) return response;
 
   const pathname = request.nextUrl.pathname;
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));

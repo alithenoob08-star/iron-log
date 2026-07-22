@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { logoutAction } from "../(auth)/actions";
@@ -14,13 +15,17 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
+  // The proxy only redirects on a *confirmed* logged-out state (see
+  // src/lib/supabase/proxy.ts) so a transient edge-runtime hiccup there
+  // doesn't bounce active users out at random. This is the real
+  // enforcement point, running in the regular Node runtime.
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .single();
 
   return (
     <div className="flex min-h-full flex-1 flex-col">

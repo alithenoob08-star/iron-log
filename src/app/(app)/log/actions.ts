@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { headers, cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type LogFormState = { error: string | null };
@@ -14,20 +13,8 @@ export async function startWorkoutAction(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
-  if (!user) {
-    const h = await headers();
-    const c = await cookies();
-    const cookieHeader = h.get("cookie") ?? "";
-    const params = new URLSearchParams({
-      debug: "nouser",
-      cookieHeaderLen: String(cookieHeader.length),
-      cookieNames: c.getAll().map((x) => x.name).join(","),
-      errMsg: userError?.message ?? "none",
-    });
-    redirect(`/login?${params.toString()}`);
-  }
+  if (!user) redirect("/login");
 
   const { data: session, error } = await supabase
     .from("workout_sessions")
