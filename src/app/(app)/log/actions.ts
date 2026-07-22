@@ -14,7 +14,7 @@ export async function startWorkoutAction(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/signup");
+  if (!user) redirect("/login");
 
   const { data: session, error } = await supabase
     .from("workout_sessions")

@@ -47,10 +47,7 @@ export async function updateSession(request: NextRequest) {
     checkFailed = true;
   }
 
-  if (checkFailed) {
-    response.headers.set("x-debug-proxy", "error-passthrough");
-    return response;
-  }
+  if (checkFailed) return response;
 
   const pathname = request.nextUrl.pathname;
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
@@ -59,10 +56,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("src", "proxy");
-    const redirectResponse = NextResponse.redirect(url);
-    response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c));
-    return redirectResponse;
+    return NextResponse.redirect(url);
   }
 
   if (user && isAuthPath) {
@@ -71,6 +65,5 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  response.headers.set("x-debug-proxy", user ? "pass-user" : "pass-public");
   return response;
 }
