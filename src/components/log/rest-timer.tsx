@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Pause, Play, Plus, RotateCcw } from "lucide-react";
 
-const DEFAULT_SECONDS = 90;
+const DEFAULT_SECONDS = 180;
 
 export function RestTimer({ lastSetAt }: { lastSetAt: string | null }) {
   const [duration, setDuration] = useState(DEFAULT_SECONDS);
