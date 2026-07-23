@@ -65,8 +65,15 @@ export default async function CalendarPage({
     ).size;
   }
 
-  const sessionsByDate = new Map<string, typeof sessions>();
-  for (const s of sessions ?? []) {
+  // Drop sessions that were started (e.g. a double tap on Start, or a slow
+  // response) but never actually got a set logged and were never finished —
+  // these are dead rows, not real history.
+  const visibleSessions = (sessions ?? []).filter(
+    (s) => s.completed_at || (statsBySession.get(s.id)?.exerciseCount ?? 0) > 0
+  );
+
+  const sessionsByDate = new Map<string, typeof visibleSessions>();
+  for (const s of visibleSessions) {
     // Bucket by local calendar date (matches how the grid cells and the
     // list below both render dates) rather than the raw UTC date prefix,
     // which can land on the wrong day near midnight.
@@ -175,11 +182,11 @@ export default async function CalendarPage({
         <h2 className="mb-3 text-xs uppercase tracking-widest text-fg-muted">
           Workouts This Month
         </h2>
-        {(sessions?.length ?? 0) === 0 ? (
+        {visibleSessions.length === 0 ? (
           <p className="text-sm text-fg-muted">No workouts logged this month.</p>
         ) : (
           <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
-            {(sessions ?? []).map((s) => {
+            {visibleSessions.map((s) => {
               const stat = statsBySession.get(s.id) ?? {
                 exerciseCount: 0,
                 volume: 0,

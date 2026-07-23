@@ -16,6 +16,25 @@ export async function startWorkoutAction(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Reuse an already-started session for this same day/freeform slot rather
+  // than creating a new one every time — otherwise a slow response or a
+  // repeat tap on Start leaves orphaned empty sessions behind in History.
+  let existingQuery = supabase
+    .from("workout_sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .is("completed_at", null)
+    .order("started_at", { ascending: false })
+    .limit(1);
+  existingQuery = routineDayId
+    ? existingQuery.eq("routine_day_id", routineDayId)
+    : existingQuery.is("routine_day_id", null);
+  const { data: existingSession } = await existingQuery.maybeSingle();
+
+  if (existingSession) {
+    redirect(`/log/${existingSession.id}`);
+  }
+
   const { data: session, error } = await supabase
     .from("workout_sessions")
     .insert({
