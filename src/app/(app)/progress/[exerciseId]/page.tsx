@@ -50,39 +50,29 @@ export default async function ExerciseProgressPage({
           .in("session_id", sessionIds)
       : { data: [] };
 
-  const bySession = new Map<
-    string,
-    { date: string; topWeight: number; volume: number }
-  >();
+  const bySession = new Map<string, { date: string; topWeight: number }>();
 
   for (const s of sets ?? []) {
     const date = sessionDateById.get(s.session_id);
     if (!date) continue;
-    const entry = bySession.get(s.session_id) ?? {
-      date,
-      topWeight: 0,
-      volume: 0,
-    };
+    const entry = bySession.get(s.session_id) ?? { date, topWeight: 0 };
     entry.topWeight = Math.max(entry.topWeight, s.weight);
-    entry.volume += s.weight * s.reps;
     bySession.set(s.session_id, entry);
   }
 
   const chartData = [...bySession.values()]
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((e) => ({ date: e.date, weight: e.topWeight, volume: e.volume }));
+    .map((e) => ({ date: e.date, weight: e.topWeight }));
 
   let maxWeight = 0;
   let bestEst1Rm = 0;
+  let totalReps = 0;
   for (const s of sets ?? []) {
     if (s.weight > maxWeight) maxWeight = s.weight;
     const est1Rm = s.weight * (1 + s.reps / 30);
     if (est1Rm > bestEst1Rm) bestEst1Rm = est1Rm;
+    totalReps += s.reps;
   }
-  const maxSessionVolume = chartData.reduce(
-    (max, e) => Math.max(max, e.volume),
-    0
-  );
 
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 py-6">
@@ -96,7 +86,7 @@ export default async function ExerciseProgressPage({
       <div className="grid grid-cols-3 gap-3">
         <PrStat label="Max Weight" value={maxWeight} />
         <PrStat label="Est. 1RM" value={Math.round(bestEst1Rm)} />
-        <PrStat label="Best Session Vol." value={maxSessionVolume} />
+        <PrStat label="Total Reps" value={totalReps} />
       </div>
 
       {chartData.length === 0 ? (

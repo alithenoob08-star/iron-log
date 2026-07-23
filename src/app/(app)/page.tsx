@@ -1,9 +1,8 @@
-import { format, subDays } from "date-fns";
+import { subDays } from "date-fns";
 import { Flame, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NavLink } from "@/components/ui/nav-link";
 import { getActiveSession } from "@/lib/active-session";
-import { VolumeSparkline } from "@/components/home/volume-sparkline";
 
 type RangeKey = "week" | "month" | "all";
 
@@ -35,27 +34,24 @@ export default async function HomePage({
         ? subDays(new Date(), 30)
         : null;
 
-  let rangeQuery = supabase
-    .from("workout_sessions")
-    .select("id, started_at")
-    .eq("user_id", user.id)
-    .not("completed_at", "is", null)
-    .order("started_at");
-  if (rangeStart) rangeQuery = rangeQuery.gte("started_at", rangeStart.toISOString());
-
   const [
     { data: profile },
     { data: streakRows },
     { data: weekStreakRows },
     activeSession,
-    { data: rangeSessions },
+    { data: allSessions },
     { data: topPrRows },
   ] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", user.id).single(),
     supabase.rpc("get_streak", { target_user: user.id }),
     supabase.rpc("get_weekly_streak", { target_user: user.id }),
     getActiveSession(supabase, user.id),
-    rangeQuery,
+    supabase
+      .from("workout_sessions")
+      .select("id, started_at")
+      .eq("user_id", user.id)
+      .not("completed_at", "is", null)
+      .order("started_at"),
     supabase
       .from("v_exercise_prs")
       .select("exercise_id, max_weight, best_est_1rm")
@@ -67,32 +63,92 @@ export default async function HomePage({
   const streak = streakRows?.[0];
   const weekStreak = weekStreakRows?.[0];
 
-  const sessionIds = (rangeSessions ?? []).map((s) => s.id);
-  const { data: rangeSets } =
+  const sessionIds = (allSessions ?? []).map((s) => s.id);
+  const { data: allSets } =
     sessionIds.length > 0
       ? await supabase
           .from("set_logs")
-          .select("session_id, weight, reps")
+          .select("session_id, exercise_id, weight")
+          .eq("is_warmup", false)
           .in("session_id", sessionIds)
       : { data: [] };
 
-  const volumeBySession = new Map<string, number>();
-  for (const s of rangeSets ?? []) {
-    volumeBySession.set(
-      s.session_id,
-      (volumeBySession.get(s.session_id) ?? 0) + s.weight * s.reps
-    );
+  const sessionDateById = new Map(
+    (allSessions ?? []).map((s) => [s.id, s.started_at])
+  );
+
+  // Range-scoped stats (Total Sets / Workouts tabs above).
+  const rangeSessionIds = new Set(
+    (allSessions ?? [])
+      .filter((s) => !rangeStart || new Date(s.started_at) >= rangeStart)
+      .map((s) => s.id)
+  );
+  const workoutCount = rangeSessionIds.size;
+  const totalSets = (allSets ?? []).filter((s) =>
+    rangeSessionIds.has(s.session_id)
+  ).length;
+
+  // Most improved (lifetime, not range-scoped): for each exercise, compare
+  // the heaviest weight from the very first session it was logged in
+  // against the current all-time max.
+  const sortedSets = [...(allSets ?? [])].sort((a, b) => {
+    const da = sessionDateById.get(a.session_id) ?? "";
+    const db = sessionDateById.get(b.session_id) ?? "";
+    return da.localeCompare(db);
+  });
+
+  const byExercise = new Map<
+    string,
+    { firstWeight: number; firstDate: string; maxWeight: number }
+  >();
+  for (const s of sortedSets) {
+    const date = sessionDateById.get(s.session_id);
+    if (!date) continue;
+    const agg = byExercise.get(s.exercise_id);
+    if (!agg) {
+      byExercise.set(s.exercise_id, {
+        firstWeight: s.weight,
+        firstDate: date,
+        maxWeight: s.weight,
+      });
+      continue;
+    }
+    if (date === agg.firstDate) agg.firstWeight = Math.max(agg.firstWeight, s.weight);
+    if (s.weight > agg.maxWeight) agg.maxWeight = s.weight;
   }
 
-  const sparklineData = (rangeSessions ?? []).map((s) => ({
-    date: format(new Date(s.started_at), "MMM d"),
-    volume: Math.round(volumeBySession.get(s.id) ?? 0),
-  }));
+  const improvedEntries = [...byExercise.entries()]
+    .map(([exerciseId, agg]) => ({
+      exerciseId,
+      firstWeight: agg.firstWeight,
+      maxWeight: agg.maxWeight,
+      improvement: agg.maxWeight - agg.firstWeight,
+    }))
+    .filter((e) => e.improvement > 0)
+    .sort((a, b) => b.improvement - a.improvement)
+    .slice(0, 5);
 
-  const workoutCount = rangeSessions?.length ?? 0;
-  const totalVolume = sparklineData.reduce((sum, d) => sum + d.volume, 0);
-  const totalSets = rangeSets?.length ?? 0;
-  const avgVolume = workoutCount > 0 ? Math.round(totalVolume / workoutCount) : 0;
+  let mostImproved: {
+    exerciseId: string;
+    name: string;
+    firstWeight: number;
+    maxWeight: number;
+    improvement: number;
+  }[] = [];
+  if (improvedEntries.length > 0) {
+    const { data: exercises } = await supabase
+      .from("exercises")
+      .select("id, name")
+      .in(
+        "id",
+        improvedEntries.map((e) => e.exerciseId)
+      );
+    const nameById = new Map((exercises ?? []).map((e) => [e.id, e.name]));
+    mostImproved = improvedEntries.map((e) => ({
+      ...e,
+      name: nameById.get(e.exerciseId) ?? "Exercise",
+    }));
+  }
 
   let topPr: {
     exerciseId: string;
@@ -173,25 +229,6 @@ export default async function HomePage({
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-xs uppercase tracking-widest text-fg-muted">
-          Total Volume
-        </p>
-        <p className="tabular font-display text-3xl">
-          {totalVolume.toLocaleString()}
-        </p>
-        <p className="mb-3 text-xs text-fg-muted">
-          across {workoutCount} workout{workoutCount === 1 ? "" : "s"}
-        </p>
-        {sparklineData.length > 1 ? (
-          <VolumeSparkline data={sparklineData} />
-        ) : (
-          <p className="text-sm text-fg-muted">
-            Log a couple more workouts to see a trend.
-          </p>
-        )}
-      </div>
-
       <div className="grid grid-cols-2 gap-3">
         <Stat
           label="Day Streak"
@@ -203,12 +240,40 @@ export default async function HomePage({
           value={weekStreak?.current_streak ?? 0}
           sub={`Best: ${weekStreak?.longest_streak ?? 0}`}
         />
+        <Stat label="Workouts" value={workoutCount} sub={RANGE_LABELS[range]} />
         <Stat label="Total Sets" value={totalSets} sub={RANGE_LABELS[range]} />
-        <Stat
-          label="Avg Vol / Workout"
-          value={avgVolume}
-          sub={RANGE_LABELS[range]}
-        />
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <p className="mb-3 text-xs uppercase tracking-widest text-fg-muted">
+          Most Improved
+        </p>
+        {mostImproved.length === 0 ? (
+          <p className="text-sm text-fg-muted">
+            Log a few more sessions to see which lifts are moving up.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {mostImproved.map((e) => (
+              <li key={e.exerciseId}>
+                <NavLink
+                  href={`/progress/${e.exerciseId}`}
+                  className="flex items-center justify-between py-2 hover:text-accent"
+                >
+                  <span>{e.name}</span>
+                  <span className="tabular flex items-center gap-2 text-sm">
+                    <span className="text-fg-muted">
+                      {e.firstWeight} &rarr; {e.maxWeight}
+                    </span>
+                    <span className="font-bold text-success">
+                      +{e.improvement}
+                    </span>
+                  </span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {topPr && (

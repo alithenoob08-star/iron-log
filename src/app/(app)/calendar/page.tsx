@@ -41,20 +41,20 @@ export default async function CalendarPage({
     sessionIds.length > 0
       ? await supabase
           .from("set_logs")
-          .select("session_id, exercise_id, weight, reps")
+          .select("session_id, exercise_id")
           .in("session_id", sessionIds)
       : { data: [] };
 
   const statsBySession = new Map<
     string,
-    { exerciseCount: number; volume: number }
+    { exerciseCount: number; setCount: number }
   >();
   for (const s of sets ?? []) {
     const stat = statsBySession.get(s.session_id) ?? {
       exerciseCount: 0,
-      volume: 0,
+      setCount: 0,
     };
-    stat.volume += s.weight * s.reps;
+    stat.setCount += 1;
     statsBySession.set(s.session_id, stat);
   }
   for (const [sessionId, stat] of statsBySession) {
@@ -189,7 +189,7 @@ export default async function CalendarPage({
             {visibleSessions.map((s) => {
               const stat = statsBySession.get(s.id) ?? {
                 exerciseCount: 0,
-                volume: 0,
+                setCount: 0,
               };
               return (
                 <li key={s.id}>
@@ -212,7 +212,7 @@ export default async function CalendarPage({
                     </div>
                     <div className="tabular text-right text-sm text-fg-muted">
                       <p>{stat.exerciseCount} exercises</p>
-                      <p>{stat.volume} vol.</p>
+                      <p>{stat.setCount} sets</p>
                     </div>
                   </NavLink>
                 </li>

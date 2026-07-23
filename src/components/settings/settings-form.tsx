@@ -40,7 +40,7 @@ export function SettingsForm({
         <span>
           <span className="block">Join the leaderboard</span>
           <span className="block text-sm text-fg-muted">
-            Share your streak and weekly volume with the group
+            Share your streak and weekly workouts with the group
           </span>
         </span>
         <input

@@ -376,7 +376,6 @@ export interface Database {
           exercise_id: string;
           max_weight: number;
           best_est_1rm: number;
-          max_session_volume: number;
         };
         Relationships: [];
       };
@@ -386,7 +385,7 @@ export interface Database {
           display_name: string;
           current_streak: number;
           longest_streak: number;
-          weekly_volume: number;
+          weekly_workouts: number;
         };
         Relationships: [];
       };

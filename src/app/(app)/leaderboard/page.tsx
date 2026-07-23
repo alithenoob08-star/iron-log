@@ -17,7 +17,7 @@ export default async function LeaderboardPage() {
 
   const { data: rows } = await supabase
     .from("v_leaderboard")
-    .select("user_id, display_name, current_streak, weekly_volume")
+    .select("user_id, display_name, current_streak, weekly_workouts")
     .order("current_streak", { ascending: false });
 
   return (
@@ -30,7 +30,7 @@ export default async function LeaderboardPage() {
           <Link href="/settings" className="text-accent hover:underline">
             Opt in from Settings
           </Link>{" "}
-          to share your streak and weekly volume.
+          to share your streak and weekly workouts.
         </p>
       )}
 
@@ -55,7 +55,7 @@ export default async function LeaderboardPage() {
                   {r.current_streak}
                 </span>
                 <span className="tabular text-sm text-fg-muted">
-                  {r.weekly_volume} vol/wk
+                  {r.weekly_workouts} workout{r.weekly_workouts === 1 ? "" : "s"}/wk
                 </span>
               </div>
             </li>
