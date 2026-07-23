@@ -3,10 +3,9 @@
 -- leaderboard's weekly_volume with a plain weekly workout count, and drop
 -- the now-unused max_session_volume column from v_exercise_prs.
 
--- Renaming weekly_volume -> weekly_workouts isn't something
--- CREATE OR REPLACE VIEW can do (Postgres only allows appending or
--- dropping trailing columns in place, not renaming existing ones), so
--- drop and recreate instead.
+-- CREATE OR REPLACE VIEW can only append new trailing columns — it can
+-- neither rename nor drop an existing one, so both views below need a
+-- real drop + create instead.
 drop view public.v_leaderboard;
 
 create view public.v_leaderboard with (security_invoker = false) as
@@ -27,7 +26,9 @@ create view public.v_leaderboard with (security_invoker = false) as
   ) wk on true
   where p.leaderboard_opt_in = true;
 
-create or replace view public.v_exercise_prs with (security_invoker = true) as
+drop view public.v_exercise_prs;
+
+create view public.v_exercise_prs with (security_invoker = true) as
   with sets as (
     select
       s.user_id,
