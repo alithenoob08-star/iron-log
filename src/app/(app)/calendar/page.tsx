@@ -139,18 +139,34 @@ export default async function CalendarPage({
         ))}
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
-          const hasWorkout = sessionsByDate.has(key);
+          const dayLabel = format(day, "d");
+          const daySessions = sessionsByDate.get(key);
+          const primary = daySessions?.[0];
+
+          if (!primary) {
+            return (
+              <div
+                key={key}
+                className="tabular flex aspect-square items-center justify-center rounded-lg border border-border text-sm text-fg-muted"
+              >
+                {dayLabel}
+              </div>
+            );
+          }
+
+          const label = primary.routine_days?.name ?? "Workout";
+
           return (
-            <div
+            <NavLink
               key={key}
-              className={`tabular flex aspect-square items-center justify-center rounded-lg border text-sm ${
-                hasWorkout
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-border text-fg-muted"
-              }`}
+              href={`/log/${primary.id}`}
+              className="tabular flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg border border-accent bg-accent/15 p-0.5 text-sm text-accent"
             >
-              {format(day, "d")}
-            </div>
+              <span>{dayLabel}</span>
+              <span className="w-full truncate px-0.5 text-center text-[8px] uppercase leading-none tracking-wide">
+                {label}
+              </span>
+            </NavLink>
           );
         })}
       </div>

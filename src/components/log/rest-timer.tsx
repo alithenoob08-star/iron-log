@@ -15,6 +15,10 @@ type TimerState = {
   endAt: number | null;
   pausedRemaining: number;
   remaining: number;
+  // True once the countdown has run out on its own, so we can show a
+  // "ready to go" message instead of a stale 0:00. Cleared on the next
+  // start (new set logged or manual resume/reset).
+  finished: boolean;
 };
 
 function storageKey(sessionId: string) {
@@ -30,6 +34,7 @@ function loadState(sessionId: string): TimerState {
   let duration = DEFAULT_SECONDS;
   let endAt: number | null = null;
   let pausedRemaining = 0;
+  let finished = false;
   try {
     const raw = localStorage.getItem(storageKey(sessionId));
     if (raw) {
@@ -37,11 +42,18 @@ function loadState(sessionId: string): TimerState {
       duration = parsed.duration ?? duration;
       endAt = parsed.endAt ?? null;
       pausedRemaining = parsed.pausedRemaining ?? 0;
+      finished = parsed.finished ?? false;
     }
   } catch {
     // ignore corrupt/unavailable storage, fall back to defaults
   }
-  return { duration, endAt, pausedRemaining, remaining: computeRemaining(endAt, pausedRemaining) };
+  return {
+    duration,
+    endAt,
+    pausedRemaining,
+    remaining: computeRemaining(endAt, pausedRemaining),
+    finished,
+  };
 }
 
 function persist(sessionId: string, state: TimerState) {
@@ -52,6 +64,7 @@ function persist(sessionId: string, state: TimerState) {
         duration: state.duration,
         endAt: state.endAt,
         pausedRemaining: state.pausedRemaining,
+        finished: state.finished,
       })
     );
   } catch {
@@ -65,6 +78,7 @@ const INITIAL_STATE: TimerState = {
   endAt: null,
   pausedRemaining: 0,
   remaining: 0,
+  finished: false,
 };
 
 export function RestTimer({
@@ -101,6 +115,7 @@ export function RestTimer({
           endAt: Date.now() + prev.duration * 1000,
           pausedRemaining: 0,
           remaining: prev.duration,
+          finished: false,
         };
         persist(sessionId, next);
         return next;
@@ -122,7 +137,7 @@ export function RestTimer({
         const left = computeRemaining(prev.endAt, prev.pausedRemaining);
         const next: TimerState =
           left <= 0
-            ? { ...prev, endAt: null, pausedRemaining: 0, remaining: 0 }
+            ? { ...prev, endAt: null, pausedRemaining: 0, remaining: 0, finished: true }
             : { ...prev, remaining: left };
         if (left <= 0) persist(sessionId, next);
         return next;
@@ -158,7 +173,12 @@ export function RestTimer({
         next = { ...prev, endAt: null, pausedRemaining: left };
       } else {
         const startFrom = prev.remaining > 0 ? prev.remaining : prev.duration;
-        next = { ...prev, endAt: Date.now() + startFrom * 1000, pausedRemaining: 0 };
+        next = {
+          ...prev,
+          endAt: Date.now() + startFrom * 1000,
+          pausedRemaining: 0,
+          finished: false,
+        };
       }
       persist(sessionId, next);
       return next;
@@ -167,7 +187,13 @@ export function RestTimer({
 
   function reset() {
     setState((prev) => {
-      const next = { ...prev, endAt: null, pausedRemaining: 0, remaining: 0 };
+      const next = {
+        ...prev,
+        endAt: null,
+        pausedRemaining: 0,
+        remaining: 0,
+        finished: false,
+      };
       persist(sessionId, next);
       return next;
     });
@@ -179,13 +205,19 @@ export function RestTimer({
         <p className="text-xs uppercase tracking-widest text-fg-muted">
           Rest Timer
         </p>
-        <p
-          className={`tabular font-display text-3xl ${
-            running && remaining <= 5 ? "text-accent" : "text-fg"
-          }`}
-        >
-          {mm}:{String(ss).padStart(2, "0")}
-        </p>
+        {state.finished ? (
+          <p className="font-display text-2xl text-accent">
+            Go whenever you&apos;re ready now!
+          </p>
+        ) : (
+          <p
+            className={`tabular font-display text-3xl ${
+              running && remaining <= 5 ? "text-accent" : "text-fg"
+            }`}
+          >
+            {mm}:{String(ss).padStart(2, "0")}
+          </p>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button

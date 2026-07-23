@@ -79,6 +79,16 @@ export default async function ActiveSessionPage({
   const isComplete = !!session.completed_at;
   const finishAction = finishWorkoutAction.bind(null, sessionId);
 
+  // Once a workout is finished, only show exercises that actually have
+  // logged sets — not every exercise the routine day plans, which would
+  // make a historical session look like it always covers the full split
+  // regardless of what was actually done that day.
+  const exercisesToShow = isComplete
+    ? plannedExercises.filter(
+        (pe) => (logsByExercise.get(pe.exercise_id) ?? []).length > 0
+      )
+    : plannedExercises;
+
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 py-6">
       <div className="flex items-center justify-between">
@@ -103,7 +113,7 @@ export default async function ActiveSessionPage({
 
       {!isComplete && <RestTimer sessionId={sessionId} lastSetAt={lastSetAt} />}
 
-      {plannedExercises.map((pe) => (
+      {exercisesToShow.map((pe) => (
         <ExerciseCard
           key={pe.id}
           exerciseId={pe.exercise_id}
