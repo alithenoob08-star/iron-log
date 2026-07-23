@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   addMonths,
   eachDayOfInterval,
@@ -9,6 +8,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
+import { NavLink } from "@/components/ui/nav-link";
 
 export default async function CalendarPage({
   searchParams,
@@ -32,7 +32,6 @@ export default async function CalendarPage({
     .from("workout_sessions")
     .select("id, started_at, completed_at, routine_days(name)")
     .eq("user_id", user.id)
-    .not("completed_at", "is", null)
     .gte("started_at", monthStart.toISOString())
     .lte("started_at", monthEnd.toISOString())
     .order("started_at");
@@ -114,19 +113,19 @@ export default async function CalendarPage({
       </div>
 
       <div className="flex items-center justify-between">
-        <Link
+        <NavLink
           href={`/calendar?month=${prevMonth}`}
           className="rounded-lg border border-border px-3 py-1.5 text-sm text-fg-muted hover:border-accent hover:text-fg"
         >
           &larr;
-        </Link>
+        </NavLink>
         <h2 className="font-display text-xl">{format(monthDate, "MMMM yyyy")}</h2>
-        <Link
+        <NavLink
           href={`/calendar?month=${nextMonth}`}
           className="rounded-lg border border-border px-3 py-1.5 text-sm text-fg-muted hover:border-accent hover:text-fg"
         >
           &rarr;
-        </Link>
+        </NavLink>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-xs uppercase tracking-wide text-fg-muted">
@@ -171,12 +170,19 @@ export default async function CalendarPage({
               };
               return (
                 <li key={s.id}>
-                  <Link
+                  <NavLink
                     href={`/log/${s.id}`}
                     className="flex items-center justify-between px-4 py-3 hover:bg-surface-2"
                   >
                     <div>
-                      <p>{s.routine_days?.name ?? "Freeform Workout"}</p>
+                      <p className="flex items-center gap-2">
+                        {s.routine_days?.name ?? "Freeform Workout"}
+                        {!s.completed_at && (
+                          <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent">
+                            In progress
+                          </span>
+                        )}
+                      </p>
                       <p className="text-sm text-fg-muted">
                         {format(new Date(s.started_at), "EEE, MMM d")}
                       </p>
@@ -185,7 +191,7 @@ export default async function CalendarPage({
                       <p>{stat.exerciseCount} exercises</p>
                       <p>{stat.volume} vol.</p>
                     </div>
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}

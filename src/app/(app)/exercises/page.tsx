@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MUSCLE_GROUPS } from "@/lib/constants";
 import type { MuscleGroup } from "@/lib/supabase/types";
+import { NavLink } from "@/components/ui/nav-link";
 
 export default async function ExercisesPage() {
   const supabase = await createClient();
@@ -21,12 +21,12 @@ export default async function ExercisesPage() {
     <main className="flex flex-1 flex-col gap-6 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl">Exercise Library</h1>
-        <Link
+        <NavLink
           href="/exercises/new"
           className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm font-bold uppercase tracking-wide text-accent-fg hover:brightness-110"
         >
           <Plus size={16} /> Add
-        </Link>
+        </NavLink>
       </div>
 
       {(exercises?.length ?? 0) === 0 && (
@@ -46,7 +46,7 @@ export default async function ExercisesPage() {
             <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
               {items.map((ex) => (
                 <li key={ex.id}>
-                  <Link
+                  <NavLink
                     href={`/exercises/${ex.id}`}
                     className="flex items-center justify-between px-4 py-3 hover:bg-surface-2"
                   >
@@ -56,7 +56,7 @@ export default async function ExercisesPage() {
                         No video yet
                       </span>
                     )}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>

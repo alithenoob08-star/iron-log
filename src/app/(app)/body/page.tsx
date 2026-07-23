@@ -33,30 +33,34 @@ export default async function BodyPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("unit_preference")
-    .eq("id", user.id)
-    .single();
+  const [
+    { data: profile },
+    { data: weights },
+    { data: measurements },
+    { data: photos },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("unit_preference")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("body_metrics")
+      .select("id, recorded_at, weight_kg")
+      .eq("user_id", user.id)
+      .order("recorded_at", { ascending: false }),
+    supabase
+      .from("body_measurements")
+      .select("id, recorded_at, measurement_type, value_cm")
+      .eq("user_id", user.id)
+      .order("recorded_at", { ascending: false }),
+    supabase
+      .from("progress_photos")
+      .select("id, storage_path, taken_at, notes")
+      .eq("user_id", user.id)
+      .order("taken_at", { ascending: false }),
+  ]);
   const unit = profile?.unit_preference ?? "kg";
-
-  const { data: weights } = await supabase
-    .from("body_metrics")
-    .select("id, recorded_at, weight_kg")
-    .eq("user_id", user.id)
-    .order("recorded_at", { ascending: false });
-
-  const { data: measurements } = await supabase
-    .from("body_measurements")
-    .select("id, recorded_at, measurement_type, value_cm")
-    .eq("user_id", user.id)
-    .order("recorded_at", { ascending: false });
-
-  const { data: photos } = await supabase
-    .from("progress_photos")
-    .select("id, storage_path, taken_at, notes")
-    .eq("user_id", user.id)
-    .order("taken_at", { ascending: false });
 
   const photoPaths = (photos ?? []).map((p) => p.storage_path);
   const { data: signedUrls } =

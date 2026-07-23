@@ -13,17 +13,21 @@ export default async function ExerciseProgressPage({
 }) {
   const { exerciseId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  const [
+    {
+      data: { user },
+    },
+    { data: exercise },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("exercises")
+      .select("id, name, overload_note")
+      .eq("id", exerciseId)
+      .maybeSingle(),
+  ]);
   if (!user) return null;
-
-  const { data: exercise } = await supabase
-    .from("exercises")
-    .select("id, name, overload_note")
-    .eq("id", exerciseId)
-    .maybeSingle();
-
   if (!exercise) notFound();
 
   const { data: sessions } = await supabase

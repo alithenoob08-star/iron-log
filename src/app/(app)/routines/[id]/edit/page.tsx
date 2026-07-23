@@ -18,29 +18,32 @@ export default async function EditRoutinePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: routine } = await supabase
-    .from("routines")
-    .select("id, name, description, is_preset, visibility, owner_id")
-    .eq("id", id)
-    .maybeSingle();
+  const [
+    {
+      data: { user },
+    },
+    { data: routine },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("routines")
+      .select("id, name, description, is_preset, visibility, owner_id")
+      .eq("id", id)
+      .maybeSingle(),
+  ]);
 
   if (!routine) notFound();
   if (routine.owner_id !== user?.id) redirect(`/routines/${id}`);
 
-  const { data: days } = await supabase
-    .from("routine_days")
-    .select("id, name, day_order")
-    .eq("routine_id", id)
-    .order("day_order");
-
-  const { data: exercises } = await supabase
-    .from("exercises")
-    .select("id, name")
-    .order("name");
+  const [{ data: days }, { data: exercises }] = await Promise.all([
+    supabase
+      .from("routine_days")
+      .select("id, name, day_order")
+      .eq("routine_id", id)
+      .order("day_order"),
+    supabase.from("exercises").select("id, name").order("name"),
+  ]);
 
   const dayExercises = await Promise.all(
     (days ?? []).map(async (day) => {

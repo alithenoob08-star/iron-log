@@ -12,20 +12,25 @@ export default async function ActiveSessionPage({
 }) {
   const { sessionId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: session } = await supabase
-    .from("workout_sessions")
-    .select("id, user_id, routine_day_id, started_at, completed_at")
-    .eq("id", sessionId)
-    .maybeSingle();
+  const [
+    {
+      data: { user },
+    },
+    { data: session },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("workout_sessions")
+      .select("id, user_id, routine_day_id, started_at, completed_at")
+      .eq("id", sessionId)
+      .maybeSingle(),
+  ]);
 
   if (!session) notFound();
   if (session.user_id !== user?.id) redirect("/log");
 
-  const [{ data: day }, { data: setLogs }, { data: allExercises }] =
+  const [{ data: day }, { data: setLogs }, { data: allExercises }, { data: plannedExercisesData }] =
     await Promise.all([
       session.routine_day_id
         ? supabase
@@ -40,19 +45,18 @@ export default async function ActiveSessionPage({
         .eq("session_id", sessionId)
         .order("set_order"),
       supabase.from("exercises").select("id, name").order("name"),
+      session.routine_day_id
+        ? supabase
+            .from("routine_exercises")
+            .select(
+              "id, exercise_id, target_sets, target_reps, target_weight, exercises(name)"
+            )
+            .eq("routine_day_id", session.routine_day_id)
+            .order("exercise_order")
+        : Promise.resolve({ data: null }),
     ]);
 
-  const plannedExercises = session.routine_day_id
-    ? (
-        await supabase
-          .from("routine_exercises")
-          .select(
-            "id, exercise_id, target_sets, target_reps, target_weight, exercises(name)"
-          )
-          .eq("routine_day_id", session.routine_day_id)
-          .order("exercise_order")
-      ).data ?? []
-    : [];
+  const plannedExercises = plannedExercisesData ?? [];
 
   const logsByExercise = new Map<string, typeof setLogs>();
   for (const log of setLogs ?? []) {
@@ -97,7 +101,7 @@ export default async function ActiveSessionPage({
         </p>
       )}
 
-      {!isComplete && <RestTimer lastSetAt={lastSetAt} />}
+      {!isComplete && <RestTimer sessionId={sessionId} lastSetAt={lastSetAt} />}
 
       {plannedExercises.map((pe) => (
         <ExerciseCard

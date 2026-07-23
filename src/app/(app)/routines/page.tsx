@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { NavLink } from "@/components/ui/nav-link";
 
 export default async function RoutinesPage() {
   const supabase = await createClient();
@@ -23,12 +23,12 @@ export default async function RoutinesPage() {
     <main className="flex flex-1 flex-col gap-6 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl">Routines</h1>
-        <Link
+        <NavLink
           href="/routines/new"
           className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm font-bold uppercase tracking-wide text-accent-fg hover:brightness-110"
         >
           <Plus size={16} /> New
-        </Link>
+        </NavLink>
       </div>
 
       <section>
@@ -71,7 +71,7 @@ function RoutineList({
     <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
       {routines.map((r) => (
         <li key={r.id}>
-          <Link
+          <NavLink
             href={`/routines/${r.id}`}
             className="flex items-center justify-between px-4 py-3 hover:bg-surface-2"
           >
@@ -86,7 +86,7 @@ function RoutineList({
                 Preset
               </span>
             )}
-          </Link>
+          </NavLink>
         </li>
       ))}
     </ul>

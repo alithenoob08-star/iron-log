@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil, Play } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { NavLink } from "@/components/ui/nav-link";
 
 export default async function RoutineDetailPage({
   params,
@@ -10,23 +10,28 @@ export default async function RoutineDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: routine } = await supabase
-    .from("routines")
-    .select("id, name, description, is_preset, visibility, owner_id")
-    .eq("id", id)
-    .maybeSingle();
+  const [
+    {
+      data: { user },
+    },
+    { data: routine },
+    { data: days },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("routines")
+      .select("id, name, description, is_preset, visibility, owner_id")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("routine_days")
+      .select("id, name, day_order")
+      .eq("routine_id", id)
+      .order("day_order"),
+  ]);
 
   if (!routine) notFound();
-
-  const { data: days } = await supabase
-    .from("routine_days")
-    .select("id, name, day_order")
-    .eq("routine_id", id)
-    .order("day_order");
 
   const dayExercises = await Promise.all(
     (days ?? []).map(async (day) => {
@@ -53,12 +58,12 @@ export default async function RoutineDetailPage({
           )}
         </div>
         {isOwner && (
-          <Link
+          <NavLink
             href={`/routines/${routine.id}/edit`}
             className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-fg-muted hover:border-accent hover:text-fg"
           >
             <Pencil size={14} /> Edit
-          </Link>
+          </NavLink>
         )}
       </div>
 
@@ -76,12 +81,12 @@ export default async function RoutineDetailPage({
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg">{day.name}</h2>
-            <Link
+            <NavLink
               href={`/log?routineId=${routine.id}&dayId=${day.id}`}
               className="flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-fg hover:brightness-110"
             >
               <Play size={12} /> Start
-            </Link>
+            </NavLink>
           </div>
 
           {exercises.length === 0 ? (

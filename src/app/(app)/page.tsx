@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Flame } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { NavLink } from "@/components/ui/nav-link";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -40,56 +40,56 @@ export default async function HomePage() {
         )}
       </div>
 
-      <Link
+      <NavLink
         href="/log"
         className="rounded-xl bg-accent px-6 py-5 text-center font-display text-2xl uppercase tracking-wide text-accent-fg transition hover:brightness-110"
       >
         Start Workout
-      </Link>
+      </NavLink>
 
       <div className="grid grid-cols-2 gap-3">
-        <Link
+        <NavLink
           href="/routines"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">Routines</p>
           <p className="text-sm text-fg-muted">Plans &amp; splits</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href="/progress"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">Progress</p>
           <p className="text-sm text-fg-muted">Charts &amp; PRs</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href="/calendar"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">History</p>
           <p className="text-sm text-fg-muted">Past workouts</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href="/exercises"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">Exercises</p>
           <p className="text-sm text-fg-muted">The library</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href="/body"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">Body</p>
           <p className="text-sm text-fg-muted">Weight, measurements, photos</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href="/leaderboard"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >
           <p className="font-display text-lg">Leaderboard</p>
           <p className="text-sm text-fg-muted">Opt-in group stats</p>
-        </Link>
+        </NavLink>
       </div>
     </main>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
@@ -31,17 +31,39 @@ export function BottomNav() {
             <li key={href} className="flex-1">
               <Link
                 href={href}
+                prefetch={false}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] uppercase tracking-wide ${
                   isActive ? "text-accent" : "text-fg-muted"
                 }`}
               >
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                {label}
+                <NavItemContent Icon={Icon} label={label} isActive={isActive} />
               </Link>
             </li>
           );
         })}
       </ul>
     </nav>
+  );
+}
+
+function NavItemContent({
+  Icon,
+  label,
+  isActive,
+}: {
+  Icon: typeof Home;
+  label: string;
+  isActive: boolean;
+}) {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      className={`flex flex-col items-center gap-1 transition-opacity ${
+        pending ? "opacity-40" : "opacity-100"
+      }`}
+    >
+      <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+      {label}
+    </span>
   );
 }
