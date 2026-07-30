@@ -91,7 +91,7 @@ export function ExerciseForm({
       <div>
         <label
           htmlFor="videoUrl"
-          className="mb-2 block text-xs uppercase tracking-widest text-fg-muted"
+          className="mb-1 block text-[10px] uppercase tracking-widest text-fg-muted/70"
         >
           Form Video URL (optional)
         </label>
@@ -101,7 +101,7 @@ export function ExerciseForm({
           type="url"
           defaultValue={defaultValues?.videoUrl ?? ""}
           placeholder="https://..."
-          className="w-full rounded-lg border border-border bg-surface-2 px-4 py-3 text-fg focus:border-accent focus:outline-none"
+          className="w-full rounded-md border border-border/50 bg-surface-2 px-3 py-1.5 text-sm text-fg-muted focus:border-accent focus:text-fg focus:outline-none"
         />
       </div>
 

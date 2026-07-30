@@ -31,9 +31,9 @@ export default async function ExerciseDetailPage({
           href={exercise.video_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-steel hover:border-accent"
+          className="flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 font-display text-xl uppercase tracking-wide text-accent-fg transition hover:brightness-110"
         >
-          <PlayCircle size={20} /> Watch form video
+          <PlayCircle size={24} /> Watch Form Video
         </Link>
       )}
 

@@ -89,7 +89,13 @@ export function RestTimer({
   lastSetAt: string | null;
 }) {
   const [state, setState] = useState<TimerState>(INITIAL_STATE);
-  const seenSetAt = useRef<string | null>(null);
+  // Seeded with the current lastSetAt (not null): on a fresh mount — e.g.
+  // reopening after the app was swiped away and killed — the session's most
+  // recent set is already "seen", not new. Without this the auto-start
+  // effect below would treat it as a brand-new set on every remount and
+  // force the timer back to full duration, discarding whatever time was
+  // actually left.
+  const seenSetAt = useRef<string | null>(lastSetAt);
   const hydrated = useRef(false);
 
   // Restore whatever was running (or paused) before the page was reloaded
