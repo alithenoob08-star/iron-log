@@ -43,6 +43,10 @@ export async function sendCoachMessageAction(
     const summary = await buildTrainingSummary(supabase, user.id);
     reply = await askCoach(summary, history);
   } catch (err) {
+    // Logged server-side (visible in Netlify's function logs) since the
+    // user-facing message below is deliberately generic — the raw error
+    // may include request/response details we don't want to show them.
+    console.error("askCoach failed:", err);
     reply =
       err instanceof Error && err.message.includes("GEMINI_API_KEY")
         ? "The coach isn't configured yet — ask whoever runs this app to add a Gemini API key."

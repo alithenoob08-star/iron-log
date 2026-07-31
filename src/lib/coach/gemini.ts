@@ -12,13 +12,15 @@ export async function askCoach(
   trainingSummary: string,
   history: { role: "user" | "assistant"; content: string }[]
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  // "-latest" alias so this doesn't silently break when a dated model
+  // version (e.g. gemini-2.5-flash) is eventually retired.
+  const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
   const contents = [
     {
