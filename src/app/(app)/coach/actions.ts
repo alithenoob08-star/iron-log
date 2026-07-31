@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ApiError } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { buildTrainingSummary } from "@/lib/coach/summary";
 import { askCoach } from "@/lib/coach/gemini";
@@ -47,10 +48,15 @@ export async function sendCoachMessageAction(
     // user-facing message below is deliberately generic — the raw error
     // may include request/response details we don't want to show them.
     console.error("askCoach failed:", err);
-    reply =
-      err instanceof Error && err.message.includes("GEMINI_API_KEY")
-        ? "The coach isn't configured yet — ask whoever runs this app to add a Gemini API key."
-        : "Something went wrong reaching the coach. Try again in a moment.";
+    if (err instanceof Error && err.message.includes("GEMINI_API_KEY")) {
+      reply =
+        "The coach isn't configured yet — ask whoever runs this app to add a Gemini API key.";
+    } else if (err instanceof ApiError && err.status >= 500) {
+      reply =
+        "Gemini is overloaded with requests right now — this isn't an app problem, just try again in a minute.";
+    } else {
+      reply = "Something went wrong reaching the coach. Try again in a moment.";
+    }
   }
 
   const { error: replyError } = await supabase.from("coach_messages").insert({

@@ -1,4 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { ApiError, GoogleGenAI } from "@google/genai";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const SYSTEM_INSTRUCTION = `You are a knowledgeable, encouraging strength-training coach inside a workout-tracking app called Iron Log. You are given real, accurate data about the user's training below — treat it as the source of truth for their history and never invent numbers that aren't in it.
 
@@ -41,16 +45,31 @@ export async function askCoach(
     })),
   ];
 
-  const response = await ai.models.generateContent({
-    model,
-    contents,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-    },
-  });
+  // Gemini occasionally returns a transient 503 ("high demand") that
+  // usually clears within a couple seconds — worth a couple of quick
+  // retries before giving up, rather than failing the whole message.
+  const maxAttempts = 3;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+        },
+      });
+      return (
+        response.text?.trim() ||
+        "Sorry, I couldn't come up with a response there — try asking again."
+      );
+    } catch (err) {
+      lastError = err;
+      const isRetryable = err instanceof ApiError && err.status >= 500;
+      if (!isRetryable || attempt === maxAttempts) throw err;
+      await sleep(attempt * 1000);
+    }
+  }
 
-  return (
-    response.text?.trim() ||
-    "Sorry, I couldn't come up with a response there — try asking again."
-  );
+  throw lastError;
 }
