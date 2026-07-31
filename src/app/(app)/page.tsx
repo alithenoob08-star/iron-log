@@ -298,6 +298,13 @@ export default async function HomePage({
 
       <div className="grid grid-cols-2 gap-3">
         <NavLink
+          href="/coach"
+          className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
+        >
+          <p className="font-display text-lg">Coach</p>
+          <p className="text-sm text-fg-muted">AI training advice</p>
+        </NavLink>
+        <NavLink
           href="/routines"
           className="rounded-xl border border-border bg-surface p-4 hover:border-accent"
         >

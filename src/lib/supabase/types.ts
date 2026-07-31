@@ -283,6 +283,31 @@ export interface Database {
           },
         ];
       };
+      coach_messages: {
+        Row: {
+          id: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          role: "user" | "assistant";
+          content: string;
+        };
+        Update: Partial<{ content: string }>;
+        Relationships: [
+          {
+            foreignKeyName: "coach_messages_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       body_metrics: {
         Row: {
           id: string;
