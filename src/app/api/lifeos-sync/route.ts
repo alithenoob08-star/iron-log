@@ -26,11 +26,16 @@ import { createServiceClient } from "@/lib/supabase/service";
 // existed. ?since=<ISO date> lets the caller bound the window; LifeOS
 // itself decides how far back is safe to ask for.
 export async function GET(req: NextRequest) {
-  const secret = process.env.LIFEOS_SYNC_SECRET;
+  // .trim() on the stored secret: a pasted env var picking up a trailing
+  // newline/space from the clipboard is an extremely common, silent
+  // failure mode (the value LOOKS identical in a dashboard text field but
+  // never matches). Trimming whitespace off a shared secret loses no
+  // security - it only makes a real copy-paste accident stop mattering.
+  const secret = (process.env.LIFEOS_SYNC_SECRET || "").trim();
   if (!secret) {
     return NextResponse.json({ error: "sync is not configured" }, { status: 500 });
   }
-  const auth = req.headers.get("authorization") || "";
+  const auth = (req.headers.get("authorization") || "").trim();
   if (auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
